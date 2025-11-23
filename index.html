@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>四柱推命 日主・五行チェッカー</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, "ヒラギノ角ゴ ProN", "Meiryo", sans-serif;
+      background: #f6f6f6;
+      padding: 24px;
+    }
+    .card {
+      max-width: 480px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px 24px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    h1 {
+      font-size: 20px;
+      margin-top: 0;
+      margin-bottom: 12px;
+      text-align: center;
+    }
+    label {
+      font-size: 14px;
+      display: block;
+      margin-bottom: 4px;
+    }
+    input[type="date"] {
+      padding: 6px 8px;
+      font-size: 14px;
+      width: 100%;
+      box-sizing: border-box;
+      margin-bottom: 12px;
+    }
+    button {
+      padding: 8px 16px;
+      font-size: 14px;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      background: #4a90e2;
+      color: #fff;
+      display: block;
+      margin: 0 auto 8px auto;
+    }
+    button:hover {
+      opacity: 0.9;
+    }
+    .note {
+      font-size: 11px;
+      color: #666;
+      text-align: center;
+      margin-bottom: 8px;
+    }
+    .result {
+      margin-top: 12px;
+      font-size: 14px;
+      line-height: 1.6;
+      white-space: pre-line;
+    }
+    .highlight {
+      font-weight: bold;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>四柱推命 日主・五行チェッカー</h1>
+    <p class="note">※1900〜2099年くらいの西暦での利用を想定した簡易ツールです</p>
+
+    <label for="birthday">生年月日を選んでください：</label>
+    <input type="date" id="birthday">
+
+    <button id="calcBtn">判定する</button>
+
+    <div id="result" class="result"></div>
+  </div>
+
+  <script>
+    // --- 立春（2月◯日）の近似計算 1900〜2199年向け ---
+
+    function getRisshunDay(year) {
+      const D = 0.2422;
+      const Y = year % 100;                    
+      const century = Math.floor(year / 100) + 1; 
+      let C;
+
+      if (century === 20) {        
+        C = 4.6295;
+      } else if (century === 21) { 
+        C = 3.87;
+      } else if (century === 22) { 
+        C = 4.15;
+      } else {
+        C = 3.87;
+      }
+
+      const L = Math.floor((Y - 1) / 4); 
+      const day = Math.floor(Y * D + C) - L; 
+      return day;
+    }
+
+    function isBeforeRisshun(year, month, day) {
+      const risshunDay = getRisshunDay(year);
+      return (month < 2) || (month === 2 && day < risshunDay);
+    }
+
+    function getFourPillarsYear(baseYear, month, day) {
+      return isBeforeRisshun(baseYear, month, day)
+        ? baseYear - 1
+        : baseYear;
+    }
+
+    // --- 日主（五行）計算（RDNを使った高精度版） ---
+
+    const stems = ["甲","乙","丙","丁","戊","己","庚","辛","壬","癸"];
+
+    const stemToElement = {
+      "甲": "木", "乙": "木",
+      "丙": "火", "丁": "火",
+      "戊": "土", "己": "土",
+      "庚": "金", "辛": "金",
+      "壬": "水", "癸": "水"
+    };
+
+    function toRdn(year, month, day) {
+      let y = year;
+      let m = month;
+      if (m < 3) {
+        y -= 1;
+        m += 12;
+      }
+      return Math.floor(365.25 * y)
+           + Math.floor(y / 400)
+           - Math.floor(y / 100)
+           + Math.floor(30.59 * (m - 2))
+           + day
+           - 678912;
+    }
+
+    const STEM_BASE_RDN = toRdn(1912, 2, 18); 
+
+    function getDayStem(year, month, day) {
+      const rdn = toRdn(year, month, day);
+      let idx = (rdn - STEM_BASE_RDN) % 10;
+      if (idx < 0) idx += 10;
+      return stems[idx];
+    }
+
+    function analyzeBirthday(year, month, day) {
+      const fourPillarsYear = getFourPillarsYear(year, month, day);
+      const risshunDay      = getRisshunDay(year);
+      const dayStem         = getDayStem(year, month, day);
+      const element         = stemToElement[dayStem];
+
+      return {
+        fourPillarsYear,
+        risshunDay,
+        dayStem,
+        element
+      };
+    }
+
+    function onClickCalc() {
+      const input = document.getElementById("birthday").value;
+      const resultEl = document.getElementById("result");
+
+      if (!input) {
+        alert("生年月日を選んでください。");
+        return;
+      }
+
+      const [y, m, d] = input.split("-").map(Number);
+      const info = analyzeBirthday(y, m, d);
+
+      let text = "";
+      text += `入力された生年月日：${y}年${m}月${d}日\n`;
+      text += `その年の立春：${y}年2月${info.risshunDay}日ごろ\n`;
+      text += `四柱上の年（立春基準）：${info.fourPillarsYear}年\n\n`;
+      text += `日主：${info.dayStem}\n`;
+      text += `あなたの日主の五行は「${info.element}」です。`;
+
+      resultEl.innerHTML =
+        `<div class="highlight">日主の五行：${info.element}</div>\n` +
+        text.replace(/\n/g, "<br>");
+    }
+
+    document.getElementById("calcBtn").addEventListener("click", onClickCalc);
+  </script>
+</body>
+</html>
