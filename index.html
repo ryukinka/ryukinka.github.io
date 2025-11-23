@@ -37,6 +37,13 @@
       box-sizing: border-box;
       margin-bottom: 6px;
     }
+    .smartphone-title {
+      font-size: 14px;
+      font-weight: bold;
+      color: #333;
+      margin-top: 8px;
+      margin-bottom: 4px;
+    }
     .hint {
       font-size: 13px;
       color: #555;
@@ -74,17 +81,6 @@
       font-size: 17px;
       margin-bottom: 4px;
     }
-    @media (min-width: 768px) {
-      body {
-        padding: 24px;
-      }
-      h1 {
-        font-size: 24px;
-      }
-      input[type="date"] {
-        font-size: 15px;
-      }
-    }
   </style>
 </head>
 <body>
@@ -95,6 +91,7 @@
     <label for="birthday">生年月日を選んでください</label>
     <input type="date" id="birthday">
 
+    <p class="smartphone-title">📱 スマホの方へ</p>
     <p class="hint">
       ①「生年月日」の空欄をタップします<br>
       ② カレンダーが表示されるので、生まれた日を選択します<br>
