@@ -9,6 +9,7 @@
       font-family: system-ui, -apple-system, "ヒラギノ角ゴ ProN", "Meiryo", sans-serif;
       background: #f6f6f6;
       padding: 16px;
+      margin: 0;
     }
     .card {
       max-width: 480px;
@@ -18,12 +19,19 @@
       border-radius: 12px;
       padding: 20px 20px 24px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      box-sizing: border-box;
     }
     h1 {
       font-size: 22px;
       margin-top: 0;
       margin-bottom: 12px;
       text-align: center;
+    }
+    .note {
+      font-size: 11px;
+      color: #666;
+      text-align: center;
+      margin-bottom: 10px;
     }
     label {
       font-size: 15px;
@@ -34,8 +42,10 @@
       padding: 10px 10px;
       font-size: 16px;
       width: 100%;
+      max-width: 100%;
       box-sizing: border-box;
       margin-bottom: 6px;
+      display: block;
     }
     .smartphone-title {
       font-size: 14px;
@@ -60,15 +70,6 @@
       color: #fff;
       display: block;
       margin: 0 auto 8px auto;
-    }
-    button:hover {
-      opacity: 0.9;
-    }
-    .note {
-      font-size: 11px;
-      color: #666;
-      text-align: center;
-      margin-bottom: 10px;
     }
     .result {
       margin-top: 16px;
@@ -116,7 +117,8 @@
       else C = 3.87;
 
       const L = Math.floor((Y - 1) / 4);
-      return Math.floor(Y * D + C) - L;
+      const day = Math.floor(Y * D + C) - L;
+      return day;
     }
 
     function isBeforeRisshun(year, month, day) {
@@ -125,7 +127,9 @@
     }
 
     function getFourPillarsYear(baseYear, month, day) {
-      return isBeforeRisshun(baseYear, month, day) ? baseYear - 1 : baseYear;
+      return isBeforeRisshun(baseYear, month, day)
+        ? baseYear - 1
+        : baseYear;
     }
 
     const stems = ["甲","乙","丙","丁","戊","己","庚","辛","壬","癸"];
@@ -136,6 +140,14 @@
       "戊": "土", "己": "土",
       "庚": "金", "辛": "金",
       "壬": "水", "癸": "水"
+    };
+
+    const elementColors = {
+      "木": "green",
+      "火": "red",
+      "土": "#bfa000",
+      "金": "gray",
+      "水": "blue"
     };
 
     function toRdn(year, month, day) {
@@ -168,7 +180,12 @@
       const dayStem         = getDayStem(year, month, day);
       const element         = stemToElement[dayStem];
 
-      return { fourPillarsYear, risshunDay, dayStem, element };
+      return {
+        fourPillarsYear,
+        risshunDay,
+        dayStem,
+        element
+      };
     }
 
     function onClickCalc() {
@@ -183,15 +200,23 @@
       const [y, m, d] = input.split("-").map(Number);
       const info = analyzeBirthday(y, m, d);
 
+      const color = elementColors[info.element] || "#333";
+
       let text = "";
-      text += `入力された生年月日：${y}年${m}月${d}日\n`;
-      text += `その年の立春：${y}年2月${info.risshunDay}日ごろ\n`;
-      text += `四柱上の年（立春基準）：${info.fourPillarsYear}年\n\n`;
-      text += `日主：${info.dayStem}\n`;
+      text += `入力された生年月日：${y}年${m}月${d}日
+`;
+      text += `その年の立春：${y}年2月${info.risshunDay}日ごろ
+`;
+      text += `四柱上の年（立春基準）：${info.fourPillarsYear}年
+
+`;
+      text += `日主：${info.dayStem}
+`;
       text += `あなたの日主の五行は「${info.element}」です。`;
 
       resultEl.innerHTML =
-        `<div class="highlight">日主の五行：${info.element}</div>` +
+        `<div class="highlight">日主の五行：<span style="color:${color}">${info.element}</span></div>
+` +
         text.replace(/\n/g, "<br>");
     }
 
